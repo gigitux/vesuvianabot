@@ -1,91 +1,49 @@
-const fetch = require('node-fetch');
 const _ = require('lodash');
-const initDb = require('./db.js');
-const addUser = require('./db.js');
-const add = require('./db.js');
-const getStation = require('./db.js');
 const TeleBot = require('telebot');
-var fs = require("fs")
+const fs = require("fs")
+const db = require('./db.js');
+const apiEAV = require('./apiEAV.js');
+
 const bot = new TeleBot({
   token: '416570446:AAG--rwfc24ePpVrjBBnRUkFlIZkC9lqhAg',
   usePlugins: ['askUser']
 });
 
-fs.exists("trains.sqlite", function(exists) {
+// Check if db exists or not
+fs.exists('trains.sqlite', function (exists) {
   if (exists) {
-    return null
+    return null;
   } else {
-    initDb.initDb()
+    db.initDb();
   }
 });
 
-function getStations () {
-  return fetch('http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&v=stazioni&r=elencoAliasStazioni')
-    .then(function (res) {
-      return res.text();
-    }).then(function (body) {
-      stations = JSON.parse(body.slice(1, -1));
-      return stations
-    });
-}
-
-function getStationID(station_departure , station_arrival) {
-  return getStations()
-  .then(function (stations) {
-    let station_1 = stations.stazioni.find((name_stations) => name_stations.nome_staz == station_departure);
-    let station_2 = stations.stazioni.find((name_stations) => name_stations.nome_staz == station_arrival);
-    return [station_1, station_2]
-  });
-};
-
-function getTrip(station_departure, station_arrival) {
-  return getStationID(station_departure, station_arrival)
-  .then(function (stations) {
-    console.log(stations[0].cod_stazione)
-    let station_departure = stations[0].cod_stazione
-    let station_arrive = stations[1].cod_stazione
-    return [station_departure_id, station_arrive_id];
-  })
-  .then(function (stations_id) {
-    let station_departure_id = stations_id[0]
-    let station_arrive_id = stations_id[1]
-    return fetch(`http://www.eavsrl.it/web/orari?l=it&idStazionePartenza=${station_departure_id}&idStazioneArrivo=${station_arrive_id}&dataPartenza=28/06/2017&oraPartenza=22&minPartenza=17`)
-      .then(function (res) {
-        return res.text();
-      }).then(function (body) {
-        stations = JSON.parse(body.slice(1, -1));
-        return stations
-      });
-  })
-}
-
-bot.on(['/start'], function (msg) {
+bot.on(['/start'], msg => {
   msg.reply.text('Ciao, benventuo nel bot della vesuviana');
-  const id = msg.from.id
-  addUser.addUser(id)
-  return bot.sendMessage(id, 'Da dove vuoi partire?', {ask:'station_departure'})
+  const id = msg.from.id;
+  // Add user to DB
+  db.addUser(id);
+  return bot.sendMessage(id, 'Da dove vuoi partire?', {ask:'station_departure'});
 });
 
+// Request to user station departure
 bot.on('ask.station_departure', msg => {
-    const id = msg.from.id;
-    const station_departure = msg.text;
-    add.addDeparture(id, msg.text)
+  const id = msg.from.id;
+  const station_departure = msg.text;
+  // Add departure station to DB
+  db.addDeparture(id, station_departure);
     return bot.sendMessage(id, `Adesso, dove vuoi arrivare?`, {ask: 'station_arrival'});
 });
 
+// Request to user station arrive
 bot.on('ask.station_arrival', msg => {
     const id = msg.from.id;
-    const station_departure = msg.text;
-    add.addArrive(id, station_departure)
-    getStation.getStation(id)
-    .then(function (stations) {
-      let departure = stations.departure;
-      let arrive = stations.arrive;
-      return getTrip(departure, arrive);
-    })
-    .then(function (stations) {
-      console.log(stations)
-    });
+    const station_arrival = msg.text;
+    // Add arrive station to DB
+    db.addArrive(id, station_arrival)
+    // Fetch user's station from id
+    db.getStationUser(id)
+    .then(apiEAV.getStations())
 })
 
 bot.start();

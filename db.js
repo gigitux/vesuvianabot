@@ -28,7 +28,7 @@ let addArrive = function (user_id, message) {
   });
 }
 
-let getStation = function (user_id) {
+let getStationUser = function (user_id) {
   return new Promise((resolve,reject ) => {
     db.get("SELECT departure, arrive FROM trains where user_id=?", [user_id], function(err, stations) {
       resolve(stations)
@@ -36,8 +36,7 @@ let getStation = function (user_id) {
   })
 }
 
-module.exports.initDb = initDb;
 module.exports.addUser = addUser;
 module.exports.addDeparture = addDeparture;
 module.exports.addArrive = addArrive;
-module.exports.getStation = getStation;
+module.exports.getStationUser = getStationUser;

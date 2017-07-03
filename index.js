@@ -43,7 +43,7 @@ bot.on('ask.station_arrival', msg => {
     // Fetch user's station from id
     db.getStationUser(id)
     .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive))
-    .then((station_final) => console.log(station_final))
+    .then((station_final) => console.log(station_final));
 })
 
 bot.start();

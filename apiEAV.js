@@ -12,33 +12,6 @@ var options = {
   ]
 };
 
-// Get stations ID
-function getStationID(station_departure , station_arrival) {
-  var fuse = new Fuse(stations.stazioni, options)
-  let station_1 = fuse.search(station_departure);
-  let station_2 = fuse.search(station_arrival);
-  if (station_1.length != 1 || station_2.length != 1) {
-    debugger
-    return null;
-  } else {
-    return {station_1, station_2};
-  }
-}
-
-// Get trip
-function getTrip(trip) {
-  let station_departure_code = trip.station_1[0].cod_stazione;
-  let station_arrival_code = trip.station_2[0].cod_stazione;
-  return fetch(`http://www.eavsrl.it/web/orari?l=it&idStazionePartenza=${station_departure_code}&idStazioneArrivo=${station_arrival_code}&dataPartenza=03/07/2017&oraPartenza=21&minPartenza=23`)
-    .then(function (res) {
-      return res.text();
-    }).then(function (body) {
-      stations = JSON.parse(body.slice(1, -1));
-      console.log(stations)
-      return stations;
-    })
-};
-
 // Fetch array Stations
 function getStations (station_departure, station_arrive) {
   return fetch('http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&v=stazioni&r=elencoAliasStazioni')
@@ -50,7 +23,35 @@ function getStations (station_departure, station_arrive) {
     })
     .then(() => getStationID(station_departure, station_arrive))
     .then((trip) => getTrip(trip))
+    .catch(error => console.log(error))
 };
 
+// Get stations ID
+function getStationID(station_departure , station_arrival, station_time) {
+  var fuse = new Fuse(stations.stazioni, options)
+  let station_1 = fuse.search(station_departure);
+  let station_2 = fuse.search(station_arrival);
+  console.log(station_1)
+  if (station_1.length != 1 || station_2.length != 1) {
+    debugger
+    return null;
+  } else {
+    debugger
+    return {station_1, station_2, station_time};
+  }
+}
+// Get trip
+function getTrip(trip) {
+  let station_departure_code = trip.station_1[0].cod_stazione;
+  let station_arrival_code = trip.station_2[0].cod_stazione;
+  debugger;
+  return fetch(`http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&r=Soluzioni&v=LeSoluzioni&idStazionePartenza=${station_departure_code}&idStazioneArrivo=${station_arrival_code}&dataPartenza=08/07/2017&oraPartenza=8&minPartenza=00&jsoncallback=jsonp1499119513251&_=1499119513353`)
+  .then(function (res) {
+    return res.text();
+  }).then(function (body) {
+    stations = JSON.parse(body.slice(19, -1));
+    return stations;
+  });
+};
 
 module.exports.getStations = getStations;

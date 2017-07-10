@@ -40,10 +40,24 @@ bot.on('ask.station_arrival', msg => {
     const station_arrival = msg.text;
     // Add arrive station to DB
     db.addArrive(id, station_arrival)
-    // Fetch user's station from id
-    db.getStationUser(id)
-    .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive))
-    .then((station_final) => console.log(station_final));
+    return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
 })
+
+// Request time
+bot.on('ask.station_time', msg => {
+  const id = msg.from.id;
+  const station_time = msg.text.slice(0,2);
+  if (!isNaN(station_time)) {
+    db.addTime(id, station_time);
+  // Fetch user's station from id
+  db.getStationUser(id)
+  .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive))
+  .then((trip) => {
+    console.log(trip)
+  });
+  } else {
+  return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
+  };
+});
 
 bot.start();

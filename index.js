@@ -51,10 +51,15 @@ bot.on('ask.station_time', msg => {
     db.addTime(id, station_time);
   // Fetch user's station from id
   db.getStationUser(id)
-  .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive))
-  .then((trip) => {
-    console.log(trip)
-  });
+  .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive, stations_user.time))
+  .then((trip) => {if (trip instanceof Error) {
+    var error = trip
+    throw error
+  } else {
+    console.log(trip);
+  }
+  })
+  .catch(error => {debugger; msg.reply.text(error)})
   } else {
   return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
   };

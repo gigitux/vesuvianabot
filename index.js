@@ -56,10 +56,13 @@ bot.on('ask.station_time', msg => {
     var error = trip
     throw error
   } else {
-    console.log(trip);
+    for (var i = 0; i < 4; i++) {
+      msg.reply.text(`🚆 PARTENZA DA: ${trip.LeSoluzioni[0].soluzioni[i].stazpartenza} ⌛ ${trip.LeSoluzioni[0].soluzioni[i].orapartenza} \n \n` +
+                    `🚆 ARRIVO A: ${trip.LeSoluzioni[0].soluzioni[i].stazarrivo}   ⌛ ${trip.LeSoluzioni[0].soluzioni[i].oraarrivo}`)
+    }
   }
   })
-  .catch(error => {debugger; msg.reply.text(error)})
+  .catch(error => msg.reply.text(error))
   } else {
   return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
   };

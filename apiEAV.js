@@ -31,7 +31,6 @@ function getStationID(station_departure , station_arrival, station_time) {
   var fuse = new Fuse(stations.stazioni, options)
   let station_1 = fuse.search(station_departure);
   let station_2 = fuse.search(station_arrival);
-  console.log(station_1)
   if (station_1.length != 1 || station_2.length != 1) {
     return null;
   } else {

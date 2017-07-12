@@ -62,7 +62,7 @@ bot.on('ask.station_time', msg => {
     }
   }
   })
-  .catch(error => msg.reply.text(error))
+  .catch(error =>{console.log("entro in errore"); msg.reply.text("ENTRO IN ERRORE")})
   } else {
   return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
   };

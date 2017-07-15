@@ -56,7 +56,6 @@ bot.on('ask.station_time', msg => {
   db.getStationUser(id)
   .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive, stations_user.time))
   .then((trip) => {if (trip instanceof Error) {
-    console.log("ci sto entrando?")
     var error = trip;
     throw error;
   } else {
@@ -64,8 +63,8 @@ bot.on('ask.station_time', msg => {
       msg.reply.text(`⚠ Non c'è nessuna corsa disponibile`);
     } else {
       for (var i = 0; (trip.LeSoluzioni[0].soluzioni.length < 3) ? (i < trip.LeSoluzioni[0].soluzioni.length) : (i < 4); i++) {
-        msg.reply.text(`🚆 PARTENZA DA: ${trip.LeSoluzioni[0].soluzioni[i].stazpartenza} ⌛ ${trip.LeSoluzioni[0].soluzioni[i].orapartenza} \n \n` +
-                    `🚆 ARRIVO A: ${trip.LeSoluzioni[0].soluzioni[i].stazarrivo}   ⌛ ${trip.LeSoluzioni[0].soluzioni[i].oraarrivo}`)
+        setTimeout((i) => msg.reply.text(`🚆 PARTENZA DA: ${trip.LeSoluzioni[0].soluzioni[i].stazpartenza} ⌛ ${trip.LeSoluzioni[0].soluzioni[i].orapartenza} \n \n` +
+                    `🚆 ARRIVO A: ${trip.LeSoluzioni[0].soluzioni[i].stazarrivo}   ⌛ ${trip.LeSoluzioni[0].soluzioni[i].oraarrivo}`),1000,i)
         db.deleteStationUser(id);
       }
     }

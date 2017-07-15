@@ -62,11 +62,12 @@ bot.on('ask.station_time', msg => {
     if (trip.LeSoluzioni[0].soluzioni.length === 0) {
       msg.reply.text(`⚠ Non c'è nessuna corsa disponibile`);
     } else {
-      for (var i = 0; (trip.LeSoluzioni[0].soluzioni.length < 3) ? (i < trip.LeSoluzioni[0].soluzioni.length) : (i < 4); i++) {
-        setTimeout((i) => msg.reply.text(`🚆 PARTENZA DA: ${trip.LeSoluzioni[0].soluzioni[i].stazpartenza} ⌛ ${trip.LeSoluzioni[0].soluzioni[i].orapartenza} \n \n` +
-                    `🚆 ARRIVO A: ${trip.LeSoluzioni[0].soluzioni[i].stazarrivo}   ⌛ ${trip.LeSoluzioni[0].soluzioni[i].oraarrivo}`),1000,i)
-        db.deleteStationUser(id);
-      }
+      let promise = Promise.resolve();
+        trip.LeSoluzioni[0].soluzioni.slice(0, 4).map((solution) => {
+          promise = promise.then(() => msg.reply.text(`🚆 PARTENZA DA: ${solution.stazpartenza} ⌛ ${solution.orapartenza} \n \n` +
+                    `🚆 ARRIVO A: ${solution.stazarrivo}   ⌛ ${solution.oraarrivo}`));
+          db.deleteStationUser(id);
+        });
     }
   }
   })

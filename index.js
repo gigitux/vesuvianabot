@@ -1,5 +1,5 @@
 const TeleBot = require('telebot');
-const fs = require("fs")
+const fs = require('fs');
 const db = require('./db.js');
 const apiEAV = require('./apiEAV.js');
 
@@ -18,7 +18,6 @@ fs.exists('trains.sqlite', function (exists) {
 });
 
 bot.on(['/start'], msg => {
-  msg.reply.text('Ciao, benventuo nel bot della vesuviana');
   const id = msg.from.id;
   // Add user to DB
   db.addUser(id);
@@ -47,25 +46,33 @@ bot.on('ask.station_arrival', msg => {
 bot.on('ask.station_time', msg => {
   const id = msg.from.id;
   const station_time = msg.text.slice(0,2);
-  if (!isNaN(station_time)) {
+  if (!isNaN(station_time) && station_time <= 24) {
     db.addTime(id, station_time);
+  } else {
+    msg.reply.text('Sembra che non hai inserito un orario corretto');
+    return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
+  }
   // Fetch user's station from id
   db.getStationUser(id)
   .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive, stations_user.time))
   .then((trip) => {if (trip instanceof Error) {
-    var error = trip
-    throw error
+    console.log("ci sto entrando?")
+    var error = trip;
+    throw error;
   } else {
-    for (var i = 0; i < 4; i++) {
-      msg.reply.text(`🚆 PARTENZA DA: ${trip.LeSoluzioni[0].soluzioni[i].stazpartenza} ⌛ ${trip.LeSoluzioni[0].soluzioni[i].orapartenza} \n \n` +
+    if (trip.LeSoluzioni[0].soluzioni.length === 0) {
+      msg.reply.text(`⚠ Non c'è nessuna corsa disponibile`);
+    } else {
+      for (var i = 0; (trip.LeSoluzioni[0].soluzioni.length < 3) ? (i < trip.LeSoluzioni[0].soluzioni.length) : (i < 4); i++) {
+        msg.reply.text(`🚆 PARTENZA DA: ${trip.LeSoluzioni[0].soluzioni[i].stazpartenza} ⌛ ${trip.LeSoluzioni[0].soluzioni[i].orapartenza} \n \n` +
                     `🚆 ARRIVO A: ${trip.LeSoluzioni[0].soluzioni[i].stazarrivo}   ⌛ ${trip.LeSoluzioni[0].soluzioni[i].oraarrivo}`)
+        db.deleteStationUser(id);
+      }
     }
   }
   })
-  .catch(error =>{console.log("entro in errore"); msg.reply.text("ENTRO IN ERRORE")})
-  } else {
-  return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
-  };
-});
+  .catch(error => msg.reply.text(error.message));
+}
+);
 
 bot.start();

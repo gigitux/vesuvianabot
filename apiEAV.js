@@ -40,7 +40,7 @@ function getStationID(station_departure , station_arrival, station_time) {
 // Get trip
 function getTrip(trip) {
   if (!trip) {
-    throw new Error("Devi essere più specifico quando selezioni una stazione");
+    throw new Error("ERRORE: Devi essere più specifico quando selezioni una stazione");
   } else {
   let station_departure_code = trip.station_1[0].cod_stazione;
   let station_arrival_code = trip.station_2[0].cod_stazione;

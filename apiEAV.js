@@ -45,7 +45,8 @@ function getTrip(trip) {
   let station_departure_code = trip.station_1[0].cod_stazione;
   let station_arrival_code = trip.station_2[0].cod_stazione;
   let station_time = trip.station_time;
-  return fetch(`http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&r=Soluzioni&v=LeSoluzioni&idStazionePartenza=${station_departure_code}&idStazioneArrivo=${station_arrival_code}&dataPartenza=08/07/2017&oraPartenza=${station_time}&minPartenza=00&jsoncallback=jsonp1499119513251&_=1499119513353`)
+  date = new Date
+  return fetch(`http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&r=Soluzioni&v=LeSoluzioni&idStazionePartenza=${station_departure_code}&idStazioneArrivo=${station_arrival_code}&dataPartenza=${date.getDate()}/${date.getMonth()}/${d.getFullYear()}&oraPartenza=${station_time}&minPartenza=00&jsoncallback=jsonp1499119513251&_=1499119513353`)
   .then(function (res) {
     return res.text();
   }).then(function (body) {

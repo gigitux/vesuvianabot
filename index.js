@@ -4,7 +4,7 @@ const db = require('./db.js');
 const apiEAV = require('./apiEAV.js');
 
 const bot = new TeleBot({
-  token: ,
+  token: '',
   usePlugins: ['askUser']
 });
 
@@ -22,6 +22,12 @@ bot.on(['/start'], msg => {
   // Add user to DB
   db.addUser(id);
   return bot.sendMessage(id, 'Da dove vuoi partire?', {ask:'station_departure'});
+});
+
+bot.on(['/lista'], msg => {
+  const id = msg.from.id;
+  apiEAV.getListStations()
+  .then((list) => list.stazioni.map((list) => bot.sendMessage(id, list.nome_staz)))
 });
 
 // Request to user station departure

@@ -13,19 +13,23 @@ var options = {
 };
 
 // Fetch array Stations
+
 function getStations (station_departure, station_arrive, station_time) {
-  return fetch('http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&v=stazioni&r=elencoAliasStazioni')
-    .then(function (res) {
-      return res.text();
-    }).then(function (body) {
-      stations = JSON.parse(body.slice(1, -1));
-      return stations;
-    })
-    .then(() => getStationID(station_departure, station_arrive, station_time))
+    return getListStations()
+    .then(() =>{getStationID(station_departure, station_arrive, station_time); debugger})
     .then((trip) => getTrip(trip))
     .catch(error => error);
 };
 
+function getListStations () {
+  return fetch('http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&v=stazioni&r=elencoAliasStazioni')
+  .then(function (res) {
+    return res.text();
+  }).then(function (body) {
+    stations = JSON.parse(body.slice(1, -1));
+    return stations;
+  })
+}
 // Get stations ID
 function getStationID(station_departure , station_arrival, station_time) {
   var fuse = new Fuse(stations.stazioni, options)
@@ -57,3 +61,4 @@ function getTrip(trip) {
 };
 
 module.exports.getStations = getStations;
+module.exports.getListStations = getListStations;

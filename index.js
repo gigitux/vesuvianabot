@@ -27,8 +27,8 @@ bot.on(['/start'], msg => {
 
 bot.on(['/lista'], msg => {
   const id = msg.from.id;
-  apiEAV.getListStations()
-  .then((list) => list.stazioni.map((list) => bot.sendMessage(id, list.nome_staz)))
+  db.getListStations()
+  .then((list) => list.map((list) => bot.sendMessage(id, list.nome_staz)))
 });
 
 // Request to user station departure
@@ -43,7 +43,7 @@ bot.on('ask.station_departure', msg => {
       db.addDeparture(id, station_departure[0].cod_stazione)
       return bot.sendMessage(id, `Adesso, dove vuoi arrivare?`, {ask: 'station_arrival'});
   } else {
-    let replyMarkup = bot.keyboard(([station_departure.map((station) => station.nome_staz)]),{resize: true});
+    let replyMarkup = bot.keyboard(([station_departure.map((station) => station.nome_staz)]),{resize: true, once: true});
     return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_departure', replyMarkup});
     }
   });
@@ -56,12 +56,13 @@ bot.on('ask.station_arrival', msg => {
   // Add departure station to DB
   db.checkStationUser(station_arrival)
   .then((station_arrival) => {
+
     let replyMarkup
     if (station_arrival.length == 1) {
       db.addArrive(id, station_arrival[0].cod_stazione)
       return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
   } else {
-    let replyMarkup = bot.keyboard(([station_arrival.map((station) => station.nome_staz)]),{resize: true});
+    let replyMarkup = bot.keyboard(([station_arrival.map((station) => station.nome_staz)]),{resize: true, once: true});
     return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_arrival', replyMarkup});
     }
   });
@@ -89,10 +90,10 @@ bot.on('ask.station_time', msg => {
       const price = trip.LeSoluzioni[0].tariffa.prezzo
       let promise = Promise.resolve();
         trip.LeSoluzioni[0].soluzioni.slice(0, 6).map((solution) => {
-          promise = promise.then(() => msg.reply.text(`🚆 PARTENZA DA: ${solution.stazpartenza} ⌛ ${solution.orapartenza} \n \n` +
+          promise = promise.then(() => bot.sendMessage(id,`🚆 PARTENZA DA: ${solution.stazpartenza} ⌛ ${solution.orapartenza} \n \n` +
                     `${(solution.oraarrivocambio1 || solution.oraarrivocambio1) ? "⚠️ CAMBIO A " + solution.stazcambio1 + " ⌛ " + solution.orapartenzacambio1 + "\n \n" : "" }`+
                     `🚆 ARRIVO A: ${solution.stazarrivo}   ⌛ ${solution.oraarrivo} \n \n` +
-                    `🎫 PREZZO: ${price} EUR`));
+                    `🎫 PREZZO: ${price} EUR`, {replyMarkup: 'hide'}));
         });
     }
   }

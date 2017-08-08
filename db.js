@@ -61,6 +61,14 @@ let checkStationUser = (stations) => {
   })
 };
 
+let getListStations = (stations) => {
+  return new Promise((resolve,reject) => {
+    db.all(`SELECT nome_staz FROM stations`, function(err, station) {
+      return resolve(station)
+    });
+  })
+};
+
 module.exports.initDb = initDb;
 module.exports.addUser = addUser;
 module.exports.addDeparture = addDeparture;
@@ -70,3 +78,4 @@ module.exports.addCounter = addCounter;
 module.exports.getStationsUser = getStationsUser;
 module.exports.checkStationUser = checkStationUser;
 module.exports.deleteStationsUser = deleteStationsUser;
+module.exports.getListStations = getListStations;

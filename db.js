@@ -32,20 +32,33 @@ let addTime = function (user_id, message) {
   });
 };
 
-let getStationUser = function (user_id) {
-  return new Promise((resolve,reject ) => {
+let addCounter = function (user_id) {
+  db.run("UPDATE trains SET counter=counter + 1 WHERE user_id=$user_id", {
+    $user_id: user_id,
+  });
+};
+let getStationsUser = function (user_id) {
+  return new Promise((resolve,reject) => {
     db.get("SELECT departure, arrive, time FROM trains where user_id=?", [user_id], function(err, stations) {
+      return resolve(stations);
+    });
+  });
+};
+
+let deleteStationsUser = function (user_id) {
+  return new Promise((resolve,reject) => {
+    db.get("DELETE departure, arrive, time FROM trains where user_id=?", [user_id], function(err, stations) {
       resolve(stations);
     });
   });
 };
 
-let deleteStationUser = function (user_id) {
-  return new Promise((resolve,reject ) => {
-    db.get("DELETE departure, arrive, time FROM trains where user_id=?", [user_id], function(err, stations) {
-      resolve(stations);
+let checkStationUser = (stations) => {
+  return new Promise((resolve,reject) => {
+    db.all(`SELECT * FROM stations WHERE nome_staz LIKE '%${stations}%'`, function(err, station) {
+      return resolve(station)
     });
-  });
+  })
 };
 
 module.exports.initDb = initDb;
@@ -53,5 +66,7 @@ module.exports.addUser = addUser;
 module.exports.addDeparture = addDeparture;
 module.exports.addArrive = addArrive;
 module.exports.addTime = addTime;
-module.exports.getStationUser = getStationUser;
-module.exports.deleteStationUser = deleteStationUser;
+module.exports.addCounter = addCounter;
+module.exports.getStationsUser = getStationsUser;
+module.exports.checkStationUser = checkStationUser;
+module.exports.deleteStationsUser = deleteStationsUser;

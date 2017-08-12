@@ -55,7 +55,7 @@ let deleteStationsUser = function (user_id) {
 
 let checkStationUser = (stations) => {
   return new Promise((resolve,reject) => {
-    db.all(`SELECT * FROM stations WHERE nome_staz LIKE '%${stations}%'`, function(err, station) {
+    db.all(`SELECT * FROM stations WHERE nome_staz LIKE '${stations}%'`, function(err, station) {
       return resolve(station)
     });
   })

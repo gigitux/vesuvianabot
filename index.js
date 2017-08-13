@@ -38,13 +38,17 @@ bot.on('ask.station_departure', msg => {
   // Add departure station to DB
   db.checkStationUser(station_departure)
   .then((station_departure) => {
-    let replyMarkup
-    if (station_departure.length == 1) {
-      db.addDeparture(id, station_departure[0].cod_stazione)
-      return bot.sendMessage(id, `Adesso, dove vuoi arrivare?`, {ask: 'station_arrival'});
-  } else {
-    let replyMarkup = bot.keyboard(([station_departure.map((station) => station.nome_staz)]),{resize: true, once: true});
-    return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_departure', replyMarkup});
+    if (station_departure.length === 0) {
+      return bot.sendMessage(id, `Non c'è nessuna fermata con questo nome`, {ask:'station_departure'});
+    } else {
+      let replyMarkup;
+      if (station_departure.length == 1 || station_departure[0].nome_staz == msg.text.toLocaleUpperCase() ) {
+        db.addDeparture(id, station_departure[0].cod_stazione)
+        return bot.sendMessage(id, `Adesso, dove vuoi arrivare?`, {ask: 'station_arrival'});
+      } else {
+        let replyMarkup = bot.keyboard(([station_departure.map((station) => station.nome_staz)]),{resize: true, once: true});
+        return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_departure', replyMarkup});
+      }
     }
   });
 });
@@ -56,14 +60,17 @@ bot.on('ask.station_arrival', msg => {
   // Add departure station to DB
   db.checkStationUser(station_arrival)
   .then((station_arrival) => {
-
-    let replyMarkup
-    if (station_arrival.length == 1) {
-      db.addArrive(id, station_arrival[0].cod_stazione)
-      return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
-  } else {
-    let replyMarkup = bot.keyboard(([station_arrival.map((station) => station.nome_staz)]),{resize: true, once: true});
-    return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_arrival', replyMarkup});
+    if (station_arrival.length === 0) {
+      return bot.sendMessage(id, `Non c'è nessuna fermata con questo nome`, {ask:'station_arrival'});
+    } else {
+      let replyMarkup;
+      if (station_arrival.length == 1 || station_arrival[0].nome_staz == msg.text.toLocaleUpperCase()) {
+        db.addArrive(id, station_arrival[0].cod_stazione)
+        return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
+      } else {
+        let replyMarkup = bot.keyboard(([station_arrival.map((station) => station.nome_staz)]),{resize: true, once: true});
+        return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_arrival', replyMarkup});
+      }
     }
   });
 });

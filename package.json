@@ -1,0 +1,26 @@
+{
+  "name": "vesuvianabot",
+  "version": "2.0.0",
+  "description": "Bot telgram for EAV",
+  "main": "index.js",
+  "dependencies": {
+    "fuse.js": "^3.2.0",
+    "node-fetch": "^2.1.2",
+    "sqlite3": "^4.0.0",
+    "telebot": "^1.2.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gigitux/vesuvianabot.git"
+  },
+  "author": "gigitux",
+  "license": " GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/gigitux/vesuvianabot/issues"
+  },
+  "homepage": "https://github.com/gigitux/vesuvianabot#readme"
+}

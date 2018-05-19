@@ -1,20 +1,64 @@
 const fetch = require('node-fetch');
+const Fuse = require('fuse.js');
+const querystring = require('querystring');
+const config = require('./config.js');
 
-function getStations (station_departure, station_arrive, station_time) {
-    return getStationForTrip(station_departure, station_arrive, station_time)
-};
-
-// Get trip
-function getStationForTrip(station_departure, station_arrive, station_time) {
-  date = new Date
-  return fetch(`http://orari.eavsrl.it/Orari/integrazione5/Orariodinamico/produzione/www/FrontJS/jsonServer.asp?l=it&r=Soluzioni&v=LeSoluzioni&idStazionePartenza=${station_departure}&idStazioneArrivo=${station_arrive}&dataPartenza=${date.getDate().toString().length == 1 ? "0" + date.getDate() : date.getDate() }/${date.getMonth().toString().length == 1 ? "0" + date.getMonth() : date.getMonth() }/${date.getFullYear()}&oraPartenza=${station_time}&minPartenza=00&jsoncallback=jsonp1502182788639&_=1502182788875`)
-  .then(function (res) {
-    return res.text();
-  }).then(function (body) {
-    stations = JSON.parse(body.slice(19, -1));
-    return stations;
+function fetchStations () {
+  const { baseUrl } = config;
+  const formData = querystring.stringify({
+    id: '1'
   });
+  const init = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  };
+  return fetch(`${baseUrl}/Home/DestinazioniFromStazione`, init);
 }
 
-module.exports.getStations = getStations;
-module.exports.getStationForTrip = getStationForTrip;
+function getInfoStation (station) {
+  return fetchStations()
+    .then((res) => res.json())
+    .then((json) => {
+      const options = {
+        shouldSort: true,
+        threshold: 0.4,
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchCharLength: 1,
+        keys: [
+          'Descrizione'
+        ]
+      };
+      const fuse = new Fuse(json, options);
+      const result = fuse.search(station);
+      return result;
+    });
+}
+
+function getTrip (date, stationArrival, time, stationDeparture) {
+  const { baseUrl } = config;
+  const formData = querystring.stringify({
+    data: date,
+    destinazione: stationArrival,
+    ora: `${time}:01`,
+    origine: stationDeparture
+  });
+  const init = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  };
+  return fetch(`${baseUrl}/Home/Create`, init);
+}
+
+module.exports.fetchStations = fetchStations;
+module.exports.getInfoStation = getInfoStation;
+module.exports.getTrip = getTrip;

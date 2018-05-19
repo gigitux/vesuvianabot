@@ -2,111 +2,109 @@ const TeleBot = require('telebot');
 const fs = require('fs');
 const db = require('./db.js');
 const apiEAV = require('./apiEAV.js');
+const utils = require('./utils.js');
 
 const bot = new TeleBot({
   token: '',
   usePlugins: ['askUser']
 });
 
-// Check if db exists or not
-fs.exists('trains.sqlite', function (exists) {
-  if (exists) {
-    return null;
-  } else {
+fs.stat('trains.sqlite', (err, stats) => {
+  if (err) {
     db.initDb();
+  } else {
+    return null;
   }
 });
 
 bot.on(['/start'], msg => {
   const id = msg.from.id;
-  // Add user to DB
   db.addUser(id);
-  db.addCounter(id)
-  return bot.sendMessage(id, 'Da dove vuoi partire?', {ask:'station_departure'});
+  db.addCounter(id);
+  return bot.sendMessage(id, 'Da dove vuoi partire?', {ask: 'stationDeparture'});
 });
 
 bot.on(['/lista'], msg => {
   const id = msg.from.id;
   db.getListStations()
-  .then((list) => list.map((list) => bot.sendMessage(id, list.nome_staz)))
+    .then((list) => list.map((list) => bot.sendMessage(id, list.nome_staz)));
 });
 
-// Request to user station departure
-bot.on('ask.station_departure', msg => {
+bot.on('ask.stationDeparture', msg => {
   const id = msg.from.id;
-  const station_departure = msg.text;
-  // Add departure station to DB
-  db.checkStationUser(station_departure)
-  .then((station_departure) => {
-    if (station_departure.length === 0) {
-      return bot.sendMessage(id, `Non c'è nessuna fermata con questo nome`, {ask:'station_departure'});
-    } else {
-      let replyMarkup;
-      if (station_departure.length == 1 || station_departure[0].nome_staz == msg.text.toLocaleUpperCase() ) {
-        db.addDeparture(id, station_departure[0].cod_stazione)
-        return bot.sendMessage(id, `Adesso, dove vuoi arrivare?`, {ask: 'station_arrival'});
-      } else {
-        let replyMarkup = bot.keyboard(([station_departure.map((station) => station.nome_staz)]),{resize: true, once: true});
-        return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_departure', replyMarkup});
-      }
+  const stationDeparture = msg.text;
+  const station = apiEAV.getInfoStation(stationDeparture);
+  station.then((station) => {
+    if (station.length === 0) {
+      return bot.sendMessage(id, `Non c'è nessuna fermata con questo nome`, {ask: 'stationDeparture'});
+    } else if (station.length === 1) {
+      const stationCode = station[0].Codice;
+      db.addDeparture(id, stationCode);
+      return bot.sendMessage(id, `Adesso, dove vuoi arrivare?`, {ask: 'stationArrival'});
+    } else if (station.length > 1) {
+      let stations = [];
+      station.forEach((station) => {
+        stations.push(station.Descrizione);
+      });
+      const replyMarkup = bot.keyboard(([stations]), {resize: true, once: true});
+      return bot.sendMessage(id, `Devi essere più specifico`, {ask: 'stationDeparture', replyMarkup});
     }
   });
 });
 
-// Request to user station arrive
-bot.on('ask.station_arrival', msg => {
+bot.on('ask.stationArrival', msg => {
   const id = msg.from.id;
-  const station_arrival = msg.text;
-  // Add departure station to DB
-  db.checkStationUser(station_arrival)
-  .then((station_arrival) => {
-    if (station_arrival.length === 0) {
-      return bot.sendMessage(id, `Non c'è nessuna fermata con questo nome`, {ask:'station_arrival'});
-    } else {
-      let replyMarkup;
-      if (station_arrival.length == 1 || station_arrival[0].nome_staz == msg.text.toLocaleUpperCase()) {
-        db.addArrive(id, station_arrival[0].cod_stazione)
-        return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
-      } else {
-        let replyMarkup = bot.keyboard(([station_arrival.map((station) => station.nome_staz)]),{resize: true, once: true});
-        return bot.sendMessage(id, `Devi essere più specifico`, {ask:'station_arrival', replyMarkup});
-      }
+  const stationArrival = msg.text;
+  const station = apiEAV.getInfoStation(stationArrival);
+  station.then((station) => {
+    if (station.length === 0) {
+      return bot.sendMessage(id, `Non c'è nessuna fermata con questo nome`, {ask: 'stationArrival'});
+    } else if (station.length === 1) {
+      const stationCode = station[0].Codice;
+      db.addArrive(id, stationCode);
+      return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'stationTime'});
+    } else if (station.length > 1) {
+      let stations = [];
+      station.forEach((station) => {
+        stations.push(station.Descrizione);
+      });
+      const replyMarkup = bot.keyboard(([stations]), {resize: true, once: true});
+      return bot.sendMessage(id, `Devi essere più specifico`, {ask: 'stationArrival', replyMarkup});
     }
   });
 });
-// Request time
-bot.on('ask.station_time', msg => {
+
+bot.on('ask.stationTime', msg => {
   const id = msg.from.id;
-  const station_time = msg.text.slice(0,2);
-  if (!isNaN(station_time) && station_time <= 24) {
-    db.addTime(id, station_time);
+  const stationTime = msg.text.slice(0, 2).replace('.', '');
+  if (!isNaN(stationTime) && stationTime <= 24) {
+    db.addTime(id, stationTime);
   } else {
     msg.reply.text('Sembra che non hai inserito un orario corretto');
-    return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'station_time'});
+    return bot.sendMessage(id, `A che ora vuoi partire?`, {ask: 'stationTime'});
   }
-  // Fetch user's station from id
   db.getStationsUser(id)
-  .then(stations_user => apiEAV.getStations(stations_user.departure, stations_user.arrive, stations_user.time))
-  .then((trip) => {if (trip instanceof Error) {
-    var error = trip;
-    throw error;
-  } else {
-    if (trip.LeSoluzioni[0].soluzioni.length === 0) {
-      msg.reply.text(`⚠ Non c'è nessuna corsa disponibile`);
-    } else {
-      const price = trip.LeSoluzioni[0].tariffa.prezzo
-      let promise = Promise.resolve();
-        trip.LeSoluzioni[0].soluzioni.slice(0, 6).map((solution) => {
-          promise = promise.then(() => bot.sendMessage(id,`🚆 PARTENZA DA: ${solution.stazpartenza} ⌛ ${solution.orapartenza} \n \n` +
-                    `${(solution.oraarrivocambio1 || solution.oraarrivocambio1) ? "⚠️ CAMBIO A " + solution.stazcambio1 + " ⌛ " + solution.orapartenzacambio1 + "\n \n" : "" }`+
-                    `🚆 ARRIVO A: ${solution.stazarrivo}   ⌛ ${solution.oraarrivo} \n \n` +
-                    `🎫 PREZZO: ${price} EUR`, {replyMarkup: 'hide'}));
+    .then(userTripInformation => {
+      const date = utils.getDate();
+      const {departure, arrive, time} = userTripInformation;
+      apiEAV.getTrip(date, arrive, time, departure)
+        .then((res) => res.json())
+        .then((tripsInfo) => tripsInfo)
+        .then((tripsInfo) => {
+          let promise = Promise.resolve();
+          tripsInfo.forEach((trip) => {
+            const destination = trip.Descrizione_destinazione;
+            const departure = trip.Descrizione_origine;
+            const timeDeparture = new Date(parseInt(trip.partenza.substr(6)));
+            const timeDestination = new Date(parseInt(trip.arrivo.substr(6)));
+            const timeDepartureToString = utils.getTime(timeDeparture);
+            const timeDestinationToString = utils.getTime(timeDestination);
+            promise = promise.then(() => bot.sendMessage(id, `🚆 PARTENZA DA: ${departure} ⌛ ${timeDepartureToString} \n \n` +
+                    `🚆 ARRIVO A: ${destination}   ⌛ ${timeDestinationToString} \n \n`
+            ));
+          });
         });
-    }
-  }
-  })
-  .catch(error => msg.reply.text(error.message));
-}
-);
+    });
+});
 
 bot.start();

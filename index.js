@@ -3,6 +3,7 @@ const fs = require('fs');
 const db = require('./db.js');
 const apiEAV = require('./apiEAV.js');
 const utils = require('./utils.js');
+const log4js = require('log4js');
 
 const bot = new TeleBot({
   token: '',
@@ -108,3 +109,8 @@ bot.on('ask.stationTime', msg => {
 });
 
 bot.start();
+
+process.on('uncaughtException', function (exception) {
+  const logger = log4js.getLogger('error');
+  logger.error('crash bot', exception);
+});

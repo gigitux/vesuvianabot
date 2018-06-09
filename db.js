@@ -1,4 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
+const log4js = require('log4js');
 
 function openDb () {
   const db = new sqlite3.Database('trains.sqlite');
@@ -50,22 +51,27 @@ function addCounter (userId) {
 
 function getStationsUser (userId) {
   const db = openDb();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.get('SELECT departure, arrive, time FROM trains where user_id=?', [userId], function (err, stations) {
       if (err) {
-        console.log(err);
+        const logger = log4js.getLogger('error');
+        logger.error('getStationsUser', err);
+        throw new Error('error');
+      } else {
+        return resolve(stations);
       }
-      return resolve(stations);
     });
   });
 }
 
 function deleteStationsUser (userId) {
   const db = openDb();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.get('DELETE departure, arrive, time FROM trains where user_id=?', [userId], function (err, stations) {
       if (err) {
-        console.log(err);
+        const logger = log4js.getLogger('error');
+        logger.error('deleteStationsUser', err);
+        throw new Error('error');
       }
       resolve(stations);
     });
@@ -74,10 +80,12 @@ function deleteStationsUser (userId) {
 
 function checkStationUser (stations) {
   const db = openDb();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.all(`SELECT * FROM stations WHERE nome_staz LIKE '${stations}%'`, function (err, station) {
       if (err) {
-        console.log(err);
+        const logger = log4js.getLogger('error');
+        logger.error('checkStationUser', err);
+        throw new Error('error');
       }
       return resolve(station);
     });
@@ -86,10 +94,12 @@ function checkStationUser (stations) {
 
 function getListStations () {
   const db = openDb();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.all(`SELECT nome_staz FROM stations`, function (err, station) {
       if (err) {
-        console.log(err);
+        const logger = log4js.getLogger('error');
+        logger.error('getListStations', err);
+        throw new Error('error');
       }
       return resolve(station);
     });
@@ -98,10 +108,12 @@ function getListStations () {
 
 function getAllUsers () {
   const db = openDb();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.all(`SELECT nome_staz FROM stations`, function (err, users) {
       if (err) {
-        console.log(err);
+        const logger = log4js.getLogger('error');
+        logger.error('getAllUsers', err);
+        throw new Error('error');
       }
       return resolve(users);
     });

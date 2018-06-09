@@ -8,7 +8,7 @@ function openDb () {
 
 function initDb () {
   const db = openDb();
-  db.run('CREATE TABLE trains (user_id TEXT NOT NULL UNIQUE, departure TEXT NOT_NULL, arrive TEXT NOT_NULL, time TEXT NOT_NULL, counter INT NOT_NULL)');
+  db.run('CREATE TABLE trains (user_id TEXT NOT NULL UNIQUE, departure TEXT NOT_NULL, arrive TEXT NOT_NULL, time TEXT NOT_NULL, counter INT NOT_NULL DEFAULT 0)');
 }
 
 function addUser (userId) {
@@ -109,7 +109,7 @@ function getListStations () {
 function getAllUsers () {
   const db = openDb();
   return new Promise((resolve) => {
-    db.all(`SELECT nome_staz FROM stations`, function (err, users) {
+    db.all(`SELECT user_id FROM trains`, function (err, users) {
       if (err) {
         const logger = log4js.getLogger('error');
         logger.error('getAllUsers', err);

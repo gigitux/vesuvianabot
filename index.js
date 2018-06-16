@@ -1,9 +1,10 @@
 const TeleBot = require('telebot');
 const fs = require('fs');
-const db = require('./db.js');
-const apiEAV = require('./apiEAV.js');
-const utils = require('./utils.js');
 const log4js = require('log4js');
+const config = require('./config');
+const db = require('./db');
+const apiEAV = require('./apiEAV');
+const utils = require('./utils');
 
 const bot = new TeleBot({
   token: '',
@@ -29,6 +30,28 @@ bot.on(['/lista'], msg => {
   const id = msg.from.id;
   db.getListStations()
     .then((list) => list.map((list) => bot.sendMessage(id, list.nome_staz)));
+});
+
+bot.on(['/sendMessage'], msg => {
+  const id = msg.from.id;
+  const { adminId } = config;
+  if (id === adminId) {
+    return bot.sendMessage(id, 'Inserisci messaggio da inviare', {ask: 'sendMessage'});
+  } else {
+    return null;
+  }
+});
+
+bot.on('ask.sendMessage', msg => {
+  const id = msg.from.id;
+  const msgToSend = msg.text;
+  db.getAllUsers().then((res) => {
+    res.forEach((user) => {
+      bot.sendMessage(user.user_id, msgToSend)
+      .catch((err) =>  logger.error('fetch getStationsUser', err));
+    });
+  });
+  return null;
 });
 
 bot.on('ask.stationDeparture', msg => {
@@ -90,7 +113,6 @@ bot.on('ask.stationTime', msg => {
       const {departure, arrive, time} = userTripInformation;
       apiEAV.getTrip(date, arrive, time, departure)
         .then((res) => res.json())
-        .then((tripsInfo) => tripsInfo)
         .then((tripsInfo) => {
           let promise = Promise.resolve();
           tripsInfo.forEach((trip) => {
@@ -104,6 +126,10 @@ bot.on('ask.stationTime', msg => {
                     `🚆 ARRIVO A: ${destination}   ⌛ ${timeDestinationToString} \n \n`
             ));
           });
+        })
+        .catch((e) => {
+          const logger = log4js.getLogger('error');
+          logger.error('fetch getStationsUser', e);
         });
     });
 });

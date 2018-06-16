@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const Fuse = require('fuse.js');
 const querystring = require('querystring');
-const config = require('./config.js');
+const config = require('./config');
 
 function fetchStations () {
   const { baseUrl } = config;
